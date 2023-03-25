@@ -1,12 +1,14 @@
 pipeline {
     agent none
     stages {
-        stage('Maven Compile') {
+        stage('Maven Compile and SAST Spotbugs') {
             agent {
                 label 'maven'
             }
             steps {
-                sh 'mvn compile'
+                sh 'mvn compile spotbugs:spotbugs'
+                archiveArtifacts artifacts: 'target/spotbugs.html'
+                archiveArtifacts artifacts: 'target/spotbugs.xml'
             }
         }
         stage('Secret Scanning') {
