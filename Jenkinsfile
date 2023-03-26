@@ -15,7 +15,7 @@ pipeline {
             agent {
                 docker {
                     image 'trufflesecurity/trufflehog:latest'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock --entrypoint='
+                    args '-u root -v /var/run/docker.sock:/var/run/docker.sock --entrypoint='
                 }
             }
             steps {
@@ -28,7 +28,7 @@ pipeline {
             agent {
                 docker {
                     image 'owasp/dependency-check:latest'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock --entrypoint='
+                    args '-u root -v /var/run/docker.sock:/var/run/docker.sock --entrypoint='
                 }
             }
             steps {
@@ -73,6 +73,16 @@ pipeline {
                 sh 'cp /zap/wrk/zapfull.xml ./zapfull.xml'
                 archiveArtifacts artifacts: 'zapfull.html'
                 archiveArtifacts artifacts: 'zapfull.xml'
+            }
+        }
+    }
+    post {
+        always {
+            node('built-in') {
+                sh 'curl -X POST https://demo.defectdojo.org/api/v2/import-scan/ -H "Authorization: Token 548afd6fab3bea9794a41b31da0e9404f733e222" -F "scan_type=Trufflehog Scan" -F "file=@./trufflehogscan.json;type=application/json" -F "engagement=1"'
+                sh 'curl -X POST https://demo.defectdojo.org/api/v2/import-scan/ -H "Authorization: Token 548afd6fab3bea9794a41b31da0e9404f733e222" -F "scan_type=Dependency Check Scan" -F "file=@./dependency-check-report.xml;type=text/xml" -F "engagement=1"'
+                sh 'curl -X POST https://demo.defectdojo.org/api/v2/import-scan/ -H "Authorization: Token 548afd6fab3bea9794a41b31da0e9404f733e222" -F "scan_type=SpotBugs Scan" -F "file=@./target/spotbugs.xml;type=text/xml" -F "engagement=1"'
+                sh 'curl -X POST https://demo.defectdojo.org/api/v2/import-scan/ -H "Authorization: Token 548afd6fab3bea9794a41b31da0e9404f733e222" -F "scan_type=ZAP Scan" -F "file=@./zapfull.xml;type=text/xml" -F "engagement=1"'
             }
         }
     }
