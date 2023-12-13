@@ -9,17 +9,18 @@ pipeline {
 				sh 'mvn compile'
 			}
 		}
-		stage('Secret Scanning'){
+		stage('SCA'){
 			agent {
 				docker{
-					image 'trufflesecurity/trufflehog:latest'
+					image 'owasp/dependency-check:latest'
 					args '-v /var/run/docker.sock:/var/run/docker.sock --entrypoint='
 				}
 			}
 			steps {
-				sh 'trufflehog --no-update filesystem . --json > trufflehogscan.json'
-				sh 'cat trufflehogscan.json'
-				archiveArtifacts artifacts: 'trufflehogscan.json'
+				sh '/usr/share/dependency-check/bin/dependency-check.sh --scan . --project "VulnerableJvaWebApplication" --format ALL'
+				archiveArtifacts artifacts: 'dependency-check-report.html'
+				archiveArtifacts artifacts: 'dependency-check-report.json'
+				archiveArtifacts artifacts: 'dependency-check-report.xml'
 			}
 		}
 		stage('Build Docker Image'){
