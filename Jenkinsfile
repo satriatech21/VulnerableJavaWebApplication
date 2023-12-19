@@ -7,8 +7,8 @@ pipeline {
             }
             steps {
                 sh 'mvn compile spotbugs:spotbugs'
-                archiveArtifacts artifacts: './spotbugs.html'
-                archiveArtifacts artifacts: './spotbugsXml.xml'
+                archiveArtifacts artifacts: 'target/spotbugs.html'
+                archiveArtifacts artifacts: 'target/spotbugsXml.xml'
             }
         }
 		stage('Secret Scanning') {
